@@ -4,21 +4,25 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 
 #ifdef _MSC_VER
 # define strdup _strdup
 #endif
 
-#define BUFFER_SIZE 4
+#define READ_CHUNK_SIZE 4096
+
 
 char *read_fd(int fd);
+char *readn_fd(int fd, size_t size);
+char *read_line_fd(int fd);
 
 int
 main(void)
 {
   char *line;
 
-  line = read_fd(STDIN_FILENO);
+  line = read_line_fd(STDIN_FILENO);
   printf("[%s]" "\n", line ? line : "(null)");
   free(line);
 
@@ -26,53 +30,98 @@ main(void)
 }
 
 
-/**
- * Reads all data from a file descriptor into a newly allocated string.
- *
- * This function reads from the given file descriptor until EOF, dynamically
- * growing the buffer as needed. It's designed to work seamlessly with both
- * regular files, pipes, and sockets.
- *
- * @param fd Valid file descriptor (must be open for reading)
- * @return Newly allocated string containing all read data, or NULL on error.
- *         Returns an empty string (not NULL) if no data was read.
- */
-char *
-read_fd(int fd)
-{
-  char *result, *tmp;
-  char buffer[BUFFER_SIZE];
-  size_t total;
+char *read_line_fd(int fd) {
+
+  char *result = NULL;
+  char *tmp;
+  char buffer[READ_CHUNK_SIZE];
+  size_t total = 0;
+  size_t len;
+  ssize_t bytes;
+  int found_newline = 0;
+
+  if (fd < 0) {
+    errno = EBADF;
+    return NULL;
+  }
+
+  while (!found_newline) {
+    do {
+      bytes = read(fd, buffer, sizeof(buffer) - 1);
+    } while (bytes == -1 && errno == EINTR);
+
+    if (bytes == -1) {
+      free(result);
+      return NULL;
+    }
+
+    if (bytes == 0)
+      break;
+
+    buffer[bytes] = '\0';
+
+    if ((tmp = memchr(buffer, '\n', bytes))) {
+      *tmp = '\0';
+      if (tmp - buffer > 1)
+      {
+        --tmp;
+        if (*tmp == '\r')
+          *tmp = '\0';
+        found_newline = true;
+      }
+    }
+    len = strlen(buffer);
+
+    if (!(tmp = realloc(result, total + len + 1))) {
+      free(result);
+      return NULL;
+    }
+
+    memcpy(&result[total], buffer, len + 1); // copy with \0
+    if (found_newline)
+      break;
+    total += len;
+  }
+
+  return result ? result : calloc(1, 1);
+}
+
+char *read_fd(int fd) {
+
+  char *result = NULL;
+  char *tmp;
+  char buffer[READ_CHUNK_SIZE];
+  size_t total = 0;
   ssize_t bytes;
 
-  if (fd < 0)
+  if (fd < 0) {
+    errno = EBADF;
     return NULL;
+  }
 
-  result = NULL;
-  total = 1; // Reserve one extra byte for the final null terminator.
-                // This trick eliminates the need for a separate "+1" in realloc.
+  while (true) {
+    do {
+      bytes = read(fd, buffer, sizeof(buffer));
+    } while (bytes == -1 && errno == EINTR);
 
-  while (true)
-  {
-    bytes = read(fd, buffer, sizeof(buffer) - 1);
-
-    if (bytes == -1)
+    if (bytes == -1) {
+      free(result);
       return NULL;
+    }
 
-    if (bytes == 0) // return as it is or an empty string if there were no data
-      return result ? result : strdup("");
+    if (bytes == 0)
+      break;
 
-    if (!(tmp = realloc(result, total + (size_t) bytes))) // termination \0 include in the begining
-    {
+    if (!(tmp = realloc(result, total + bytes + 1))) {
       free(result);
       return NULL;
     }
     result = tmp;
 
-    buffer[bytes] = '\0';
-    memcpy(&result[total - 1], buffer, bytes + 1); // copy buffer data with termination \0
-    total += (size_t) bytes;                       // and rewrite previous \0
+    memcpy(&result[total], buffer, bytes);
+    total += bytes;
+    result[total] = '\0';
   }
 
-  return result;
+  return result ? result : calloc(1, 1);
 }
