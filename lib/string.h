@@ -1,5 +1,5 @@
 
-// file: string.h
+// file: lib/string.h
 
 #pragma once
 

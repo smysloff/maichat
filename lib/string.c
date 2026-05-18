@@ -1,5 +1,5 @@
 
-// file: string.c
+// file: lib/string.c
 
 #include "string.h"
 

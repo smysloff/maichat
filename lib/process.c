@@ -1,5 +1,5 @@
 
-// file: process.c
+// file: lib/process.c
 
 #include "process.h"
 

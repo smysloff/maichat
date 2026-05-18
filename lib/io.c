@@ -1,5 +1,5 @@
 
-// file: io.c
+// file: lib/io.c
 
 #include "io.h"
 
