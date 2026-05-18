@@ -1,7 +1,9 @@
 
 // file: main.c
 
-#include "util.h"
+#include "process.h"
+#include "io.h"
+#include "string.h"
 
 #include <arpa/inet.h>
 #include <netinet/in.h>

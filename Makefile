@@ -2,7 +2,7 @@
 # file: Makefile
 
 all:
-	@cc -Wall -Werror -Wextra -g main.c lib/*.c -o maichat
+	@cc -Wall -Werror -Wextra -g main.c lib/*.c -I./lib -o maichat
 	@./maichat
 
 .PHONY: all
