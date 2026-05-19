@@ -21,3 +21,19 @@
 
   exit(EXIT_FAILURE);
 }
+
+void *xmalloc(size_t size)
+{
+  void *ptr;
+  if (!(ptr = malloc(size)))
+    die("xmalloc() error");
+  return ptr;
+}
+
+void *xrealloc(void *p, size_t size)
+{
+  void *tmp;
+  if (!(tmp = realloc(p, size)))
+    die("realloc() error");
+  return tmp;
+}
