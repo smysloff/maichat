@@ -260,7 +260,7 @@ size_t file_write_s(FILE *stream, const char *s)
 {
   if (!s || !stream) {
     errno = EINVAL;
-    die("fputs() error");
+    die("file_write_s() error");
   }
   return file_write(stream, s, strlen(s));
 }

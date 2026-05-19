@@ -3,16 +3,17 @@
 
 #pragma once
 
-#include "process.h"   // die()
+#include "process.h"   // die(), xmalloc(), xrealloc()
 
-#include <errno.h>     // errno
+#include <errno.h>     // errno, EINVAL, EINTR, EBADF, ENOMEM
 #include <stdbool.h>   // true, false
 #include <stddef.h>    // NULL, size_t
 #include <stdint.h>    // SIZE_MAX
-#include <stdio.h>     // FILE
-#include <stdlib.h>    // malloc(), realloc(), free()
+#include <stdio.h>     // FILE, EOF, fgetc(), fwrite(), fread(), feof(), ferror(), clearerr()
+#include <stdlib.h>    // exit(), free()
+#include <string.h>    // strlen()
 #include <sys/types.h> // ssize_t
-#include <unistd.h>    // exit(), read(), write()
+#include <unistd.h>    // read(), write()
 
 // fd
 size_t fd_write(int fd, const void *buf, size_t count);
